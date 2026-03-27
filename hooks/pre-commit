@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eu
+
+echo "Checking formatting"
+mix format --check-formatted
+
+echo "Running credo checks"
+mix credo suggest --format=oneline --min-priority=high
+
+echo "Running tests"
+mix test --max-failures=1
