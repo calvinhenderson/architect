@@ -21,7 +21,7 @@ defmodule Architect.MixProject do
   def application do
     [
       mod: {Architect.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :yamerl]
     ]
   end
 
@@ -66,7 +66,9 @@ defmodule Architect.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:yamerl, "~> 0.10.0"},
+      {:ex_json_schema, "~> 0.11.2"}
     ]
   end
 

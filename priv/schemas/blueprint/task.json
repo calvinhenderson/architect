@@ -1,0 +1,25 @@
+{
+  "$id": "schemas/blueprint/task",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "description": "Blueprint task",
+  "unevaluatedProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-z0-9._-]+$",
+      "description": "The unique id of the task"
+    },
+    "description": {
+      "type": "string",
+      "description": "A markdown-capable string containing a task description"
+    },
+    "if": {
+      "type": "object",
+      "description": "A boolean expression that decides whether a task should run"
+    }
+  },
+  "required": [
+    "id",
+    "if"
+  ]
+}
