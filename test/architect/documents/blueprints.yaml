@@ -1,0 +1,41 @@
+---
+name: Blueprints
+yaml: |
+  ---
+  id: test-blueprint-parsing
+  namespace: testing.blueprints
+  env:
+    key: value
+  inputs:
+    name:
+      type: string
+      description: The name to greet
+  tasks:
+  - id: example_task
+    type: core.tasks.greet
+    inputs:
+      subject: "{{ blueprint.inputs.name }}"
+  triggers:
+  - id: daily
+    type: cron
+    schedule: 0 0 * * *
+json: |
+  [{
+    "id": "test-blueprint-parsing",
+    "namespace": "testing.blueprints",
+    "env": {"key": "value"},
+    "inputs": {
+      "name": {"type": "string", "description": "The name to greet"}
+    },
+    "tasks": [
+      {
+        "id": "example_task",
+        "type": "core.tasks.greet",
+        "inputs": {"subject": "{{ blueprint.inputs.name }}"}
+      }
+    ],
+    "triggers": [
+      {"id": "daily", "type": "cron", "schedule": "0 0 * * *"}
+    ]
+  }]
+---
