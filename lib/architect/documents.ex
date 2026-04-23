@@ -1,7 +1,22 @@
 defmodule Architect.Documents do
+  @doc """
+  Loads a yaml document to a list of maps.
+  """
+  @spec load_yaml(binary(), keyword()) :: [map()]
   def load_yaml(contents, opts \\ []) do
-    :yamerl.decode(contents, opts)
-    |> do_decode_documents()
+    try do
+      :yamerl.decode(contents, opts)
+      |> do_decode_documents()
+    catch
+      {:yamerl_exception, errors} ->
+        errors =
+          errors
+          |> Enum.map(fn {:yamerl_parsing_error, :error, msg, line, character, _, _, _} ->
+            %{error: to_string(msg), line: line, character: character}
+          end)
+
+        {:error, :decode_yaml, errors}
+    end
   end
 
   defguardp is_json_term(term)
@@ -21,8 +36,11 @@ defmodule Architect.Documents do
         |> do_decode_document()
         |> Enum.into(%{})
 
-      ignored when ignored == :null or ignored == [] ->
-        []
+      head when is_json_term(head) ->
+        do_decode_yaml(head)
+
+      :null ->
+        :null
     end)
   end
 
@@ -41,6 +59,8 @@ defmodule Architect.Documents do
   end
 
   # Handle map keys
+  defp do_decode_yaml({:null, val}), do: {:null, do_decode_yaml(val)}
+
   defp do_decode_yaml({key, val}) when is_charlist(key),
     do: {to_string(key), do_decode_yaml(val)}
 

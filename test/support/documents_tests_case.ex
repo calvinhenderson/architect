@@ -3,32 +3,39 @@ defmodule Architect.DocumentsTestsCase do
     search_path
     |> Path.wildcard()
     |> Enum.sort()
-    |> Enum.map(&File.read!/1)
-    |> Enum.map(&Architect.Documents.load_yaml/1)
-    |> Enum.map(&List.first/1)
-    |> Enum.map(&Map.put_new(&1, "fail", false))
-    |> Enum.map(fn
-      %{"fail" => true} = test_case ->
-        quote do
-          test unquote(test_case["name"]) do
-            yaml = unquote(test_case["yaml"])
-            assert catch_throw(Architect.Documents.load_yaml(yaml))
-          end
-        end
+    |> Enum.map(fn path ->
+      document =
+        path
+        |> File.read!()
+        |> Architect.Documents.load_yaml()
+        |> List.first()
 
-      test_case ->
-        name = test_case["name"]
-        yaml = test_case["yaml"]
-        json = test_case["json"]
-
-        quote do
-          test unquote(name) do
-            json = JSON.decode!(unquote(json))
-            yaml = Architect.Documents.load_yaml(unquote(yaml))
-            assert json == yaml
-          end
-        end
+      {path, document}
+      |> map_test_case()
     end)
+  end
+
+  defp map_test_case({_, %{"fail" => true, "name" => name, "yaml" => yaml}}) do
+    quote do
+      test unquote(name) do
+        yaml = unquote(yaml)
+        assert {:error, :decode_yaml, _errors} = Architect.Documents.load_yaml(yaml)
+      end
+    end
+  end
+
+  defp map_test_case({_, %{"name" => name, "yaml" => yaml, "json" => json}}) do
+    quote do
+      test unquote(name) do
+        json = JSON.decode!(unquote(json))
+        yaml = Architect.Documents.load_yaml(unquote(yaml))
+        assert json == yaml
+      end
+    end
+  end
+
+  defp map_test_case({test_case, _}) do
+    raise "Invalid test case format: #{test_case}"
   end
 
   defmacro __using__(_) do

@@ -1,0 +1,5 @@
+name: Fail to decode invalid syntax
+fail: true
+yaml: |
+  valid: true
+  invalid
