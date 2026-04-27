@@ -1,8 +1,24 @@
 defmodule Architect.Documents do
+  @moduledoc """
+  An API for interacting with YAML documents.
+  """
+
+  @type parsing_error() :: %{error: binary(), line: number(), character: number()}
+  @type decode_error() ::
+          {:error, :decode_yaml, [parsing_error()]}
+
   @doc """
   Loads a yaml document to a list of maps.
+
+  ## Example
+
+      iex> document = \"""
+      > example: true
+      > \"""
+      iex> load_yaml(document)
+      [%{"example" => true}]
   """
-  @spec load_yaml(binary(), keyword()) :: [map()]
+  @spec load_yaml(binary(), keyword()) :: [map()] | decode_error()
   def load_yaml(contents, opts \\ []) do
     try do
       :yamerl.decode(contents, opts)
