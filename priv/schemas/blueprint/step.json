@@ -13,13 +13,16 @@
       "type": "string",
       "description": "A markdown-capable string containing a task description"
     },
+    "inputs": {
+      "type": "object",
+      "description": "A dictionary of input variables to pass into the step"
+    },
     "if": {
       "type": "object",
       "description": "A boolean expression that decides whether a task should run"
     }
   },
   "required": [
-    "id",
-    "if"
+    "id"
   ]
 }

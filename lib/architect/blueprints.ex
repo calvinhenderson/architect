@@ -1,5 +1,6 @@
 defmodule Architect.Blueprints do
   @moduledoc """
+  Provides an API for interacting with blueprints.
   """
 
   import Architect.Schemas, only: [validate_data: 2]

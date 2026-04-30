@@ -12,11 +12,15 @@
       "type": "string",
       "pattern": "^[A-z0-9._-]+$"
     },
-    "tasks": {
+    "max_attempts": {
+      "type": "integer",
+      "default": "3"
+    },
+    "steps": {
       "type": "array",
       "items": {
         "type": "object",
-        "$ref": "schemas/blueprint/task"
+        "$ref": "schemas/blueprint/step"
       }
     },
     "env": {
@@ -39,6 +43,6 @@
   "required": [
     "id",
     "namespace",
-    "tasks"
+    "steps"
   ]
 }
