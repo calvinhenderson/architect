@@ -1,4 +1,8 @@
 defmodule Architect.DocumentsTestsCase do
+  @moduledoc """
+  Provides a test case for document tests.
+  """
+
   defmacro generate_document_tests(search_path) do
     search_path
     |> Path.wildcard()

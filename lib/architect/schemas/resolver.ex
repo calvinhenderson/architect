@@ -1,4 +1,8 @@
 defmodule Architect.Schemas.Resolver do
+  @moduledoc """
+  Resolves schema references.
+  """
+
   alias Architect.Schemas.Embedded
 
   @spec resolve(binary()) :: struct() | {:error, :resolve_schema, term()}
