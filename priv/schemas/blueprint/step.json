@@ -2,16 +2,22 @@
   "$id": "schemas/blueprint/task",
   "$schema": "http://json-schema.org/draft-07/schema",
   "description": "Blueprint task",
-  "unevaluatedProperties": false,
+  "type": "object",
+  "additionalProperties": false,
   "properties": {
     "id": {
       "type": "string",
       "pattern": "^[A-z0-9._-]+$",
       "description": "The unique id of the task"
     },
+    "type": {
+      "type": "string",
+      "pattern": "^[A-z0-9._-]+$",
+      "description": "The type of plugin that the step will call"
+    },
     "description": {
       "type": "string",
-      "description": "A markdown-capable string containing a task description"
+      "description": "A string containing a description of the step"
     },
     "inputs": {
       "type": "object",
@@ -23,6 +29,7 @@
     }
   },
   "required": [
-    "id"
+    "id",
+    "type"
   ]
 }

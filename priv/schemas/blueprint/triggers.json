@@ -2,30 +2,36 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "schemas/blueprint/triggers",
   "title": "Blueprint triggers",
-  "description": "Describes event triggers for a blueprint",
+  "description": "Describes external triggers for a blueprint",
   "type": "array",
   "items": {
-    "oneOf": [
+    "type": "object",
+    "allOf": [
       {
-        "$ref": "#/definitions/schedule"
-      },
-      {
-        "$ref": "#/definitions/webhook"
-      },
-      {
-        "$ref": "#/definitions/workflow"
+        "if": {
+          "properties": {
+            "type": {
+              "const": "duration"
+            }
+          }
+        },
+        "then": {
+          "$ref": "#/$defs/duration"
+        }
       }
     ]
   },
-  "definitions": {
-    "schedule": {
-      "type": "string"
-    },
-    "webhook": {
-      "type": "string"
-    },
-    "workflow": {
-      "type": "string"
+  "$defs": {
+    "duration": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "duration"
+        },
+        "duration": {
+          "$ref": "#/$defs/iso8601dur"
+        }
+      }
     }
   }
 }

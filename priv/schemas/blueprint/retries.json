@@ -1,0 +1,28 @@
+{
+  "$id": "schemas/blueprint/retries",
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "description": "Blueprint retries",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "max_attempts": {
+      "description": "The maximum number of attempts to perform before failing the task",
+      "type": "integer",
+      "minimum": 1
+    },
+    "backoff": {
+      "description": "The backoff policy",
+      "type": "string",
+      "enum": [
+        "none",
+        "constant",
+        "exponential"
+      ]
+    },
+    "delay": {
+      "description": "The duration to wait between attempts",
+      "type": "string",
+      "$ref": "schemas/duration"
+    }
+  }
+}

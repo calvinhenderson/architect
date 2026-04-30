@@ -2,41 +2,32 @@
   "$id": "schemas/blueprint",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Blueprint Definition",
+  "type": "object",
   "additionalProperties": false,
   "properties": {
     "id": {
       "type": "string",
       "pattern": "^[A-z0-9._-]+$"
     },
-    "namespace": {
-      "type": "string",
-      "pattern": "^[A-z0-9._-]+$"
-    },
-    "max_attempts": {
-      "type": "integer",
-      "default": "3"
+    "retries": {
+      "$ref": "schemas/blueprint/retries"
     },
     "steps": {
       "type": "array",
       "items": {
-        "type": "object",
         "$ref": "schemas/blueprint/step"
       }
     },
     "env": {
-      "type": "object",
       "$ref": "schemas/blueprint/env"
     },
     "inputs": {
-      "type": "object",
       "$ref": "schemas/blueprint/inputs"
     },
     "outputs": {
-      "type": "object",
-      "$ref": "schemas/blueprint/outputs"
+      "type": "object"
     },
     "triggers": {
-      "type": "object",
       "$ref": "schemas/blueprint/triggers"
     }
   },
