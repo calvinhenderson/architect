@@ -91,7 +91,13 @@ defmodule Architect.MixProject do
         "esbuild architect --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --unused",
+        "format",
+        "test",
+        "credo"
+      ]
     ]
   end
 end
