@@ -16,22 +16,13 @@
           }
         },
         "then": {
-          "$ref": "#/$defs/duration"
+          "properties": {
+            "duration": {
+              "$ref": "schemas/duration"
+            }
+          }
         }
       }
     ]
-  },
-  "$defs": {
-    "duration": {
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "const": "duration"
-        },
-        "duration": {
-          "$ref": "#/$defs/iso8601dur"
-        }
-      }
-    }
   }
 }
