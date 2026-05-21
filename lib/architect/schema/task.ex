@@ -2,6 +2,7 @@ defmodule Architect.Schema.Task do
   @moduledoc """
   Tasks store blueprints for creating runs.
   """
+  alias Architect.Blueprints
 
   use Ecto.Schema
 
@@ -31,8 +32,8 @@ defmodule Architect.Schema.Task do
   @foreign_key_type :binary_id
   schema "tasks" do
     field :name, :string
-    field :blueprint, :binary
-    field :description, :binary
+    field :blueprint, :map
+    field :description, :string
     field :enabled_at, :utc_datetime
     field :deleted_at, :utc_datetime
 
@@ -44,13 +45,43 @@ defmodule Architect.Schema.Task do
     task
     |> cast(attrs, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
+    |> validate_blueprint()
   end
 
-  def enabled_changeset(task, enabled),
-    do: cast(task, %{enabled_at: if(enabled, do: DateTime.utc_now(), else: nil)}, [:enabled_at])
+  defp validate_blueprint(changeset) do
+    with blueprint when not is_nil(blueprint) <- get_field(changeset, :blueprint),
+         {:ok, evaluated_blueprint} <- Blueprints.evaluate_blueprint(blueprint) do
+      put_change(changeset, :blueprint, evaluated_blueprint)
+    else
+      nil ->
+        changeset
 
-  def deleted_changeset(task, deleted),
-    do: cast(task, %{deleted_at: if(deleted, do: DateTime.utc_now(), else: nil)}, [:deleted_at])
+      {:error, _reason, errors} ->
+        Enum.reduce(errors, changeset, &add_error(&2, :blueprint, &1))
+    end
+  end
+
+  def enabled_changeset(task, enabled) do
+    enabled_at = if enabled, do: DateTime.utc_now(), else: nil
+    deleted_at = if enabled, do: nil, else: task.deleted_at
+
+    cast(
+      task,
+      %{enabled_at: enabled_at, deleted_at: deleted_at},
+      [:enabled_at, :deleted_at]
+    )
+  end
+
+  def deleted_changeset(task, deleted) do
+    enabled_at = if deleted, do: nil, else: task.enabled_at
+    deleted_at = if deleted, do: DateTime.utc_now(), else: nil
+
+    cast(
+      task,
+      %{enabled_at: enabled_at, deleted_at: deleted_at},
+      [:enabled_at, :deleted_at]
+    )
+  end
 
   def tasks_query(opts) do
     from(w in __MODULE__,

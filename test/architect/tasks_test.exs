@@ -7,9 +7,9 @@ defmodule Architect.TasksTest do
   describe "list_tasks/1" do
     setup do
       %{
-        enabled: %{name: "Enabled task", enabled_at: DateTime.utc_now(), deleted_at: nil},
-        disabled: %{name: "Disabled task", enabled_at: nil, deleted_at: nil},
-        deleted: %{name: "Deleted task", enabled_at: nil, deleted_at: DateTime.utc_now()}
+        enabled: [name: "Enabled task", enabled_at: DateTime.utc_now(), deleted_at: nil],
+        disabled: [name: "Disabled task", enabled_at: nil, deleted_at: nil],
+        deleted: [name: "Deleted task", enabled_at: nil, deleted_at: DateTime.utc_now()]
       }
       |> Enum.map(fn {k, v} -> {k, task_fixture(v)} end)
     end
@@ -85,18 +85,14 @@ defmodule Architect.TasksTest do
 
   describe "create_changeset/2" do
     test "returns a changeset" do
-      params = %{
-        name: "Test Task",
-        blueprint: "<valid-blueprint>"
-      }
-
+      params = valid_task_params()
       assert %Ecto.Changeset{} = Tasks.create_changeset(%Task{}, params)
     end
   end
 
   describe "create_task/2" do
     test "creates a task with valid params" do
-      params = %{name: "Task #{:rand.uniform(999)}", blueprint: "<valid-blueprint>"}
+      params = valid_task_params()
       assert {:ok, %Task{}} = Tasks.create_task(%Task{}, params)
     end
 
@@ -106,15 +102,13 @@ defmodule Architect.TasksTest do
       assert {:error, changeset} = Tasks.create_task(%Task{}, params)
       assert "can't be blank" in errors_on(changeset).name
     end
+
+    test "validates blueprints"
   end
 
   describe "update_changeset/2" do
     test "returns a changeset" do
-      params = %{
-        name: "Test Task",
-        blueprint: "<valid-blueprint>"
-      }
-
+      params = valid_task_params()
       assert %Ecto.Changeset{} = Tasks.update_changeset(%Task{}, params)
     end
   end
@@ -122,7 +116,7 @@ defmodule Architect.TasksTest do
   describe "update_task/2" do
     test "updates a task with valid params" do
       task = task_fixture()
-      params = %{name: "Updated task", blueprint: "<valid-blueprint>"}
+      params = valid_task_params(name: "Updated task")
 
       assert {:ok, %Task{name: "Updated task"}} =
                Tasks.update_task(task, params)
@@ -135,6 +129,8 @@ defmodule Architect.TasksTest do
       assert {:error, changeset} = Tasks.update_task(task, params)
       assert "can't be blank" in errors_on(changeset).name
     end
+
+    test "validates blueprints"
   end
 
   describe "enable_task/1" do
@@ -172,14 +168,26 @@ defmodule Architect.TasksTest do
     end
   end
 
-  defp task_fixture(params \\ %{}) do
-    create_params =
-      %{
-        name: "Task #{:rand.uniform(999)}",
-        blueprint: "<valid-blueprint>"
-      }
-      |> Map.merge(params)
+  defp valid_task_params(opts \\ []) do
+    params = Enum.into(opts, %{})
+    id = :rand.uniform(999)
 
+    {:ok, blueprint} =
+      """
+      id: blueprint-#{id}
+      steps: []
+      """
+      |> Architect.Blueprints.evaluate_blueprint()
+
+    %{
+      name: "Task #{id}",
+      blueprint: blueprint
+    }
+    |> Map.merge(params)
+  end
+
+  defp task_fixture(opts \\ []) do
+    create_params = valid_task_params(opts)
     {:ok, task} = Tasks.create_task(%Task{}, create_params)
     task
   end

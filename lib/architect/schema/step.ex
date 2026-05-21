@@ -14,41 +14,37 @@ defmodule Architect.Schema.Step do
 
   @type t() :: [
           id: binary(),
+          run_id: binary(),
+          run: Run.t() | Ecto.Association.NotLoaded.t(),
           step_id: binary(),
-          index: non_neg_integer(),
           status: status(),
-          raw_inputs: map() | nil,
-          outputs: map() | nil,
-          if_expr: binary() | nil,
+          inputs: map(),
+          outputs: map(),
+          completed_at: DateTime.t(),
           inserted_at: DateTime.t(),
           updated_at: DateTime.t()
         ]
 
   @required_attrs [
     :step_id,
-    :index,
     :status
   ]
 
   @optional_attrs [
-    :raw_inputs,
+    :inputs,
     :outputs,
-    :if_expr
+    :completed_at
   ]
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "steps" do
-    field :step_id, :binary
-
-    field :raw_inputs, :map, default: %{}
-    field :outputs, :map, default: %{}
-
-    field :if_expr, :string
-    field :index, :integer
-    field :status, Ecto.Enum, values: @status
-
     belongs_to :run, Run
+    field :step_id, :string
+    field :status, Ecto.Enum, values: @status
+    field :inputs, :map
+    field :outputs, :map
+    field :completed_at, :utc_datetime_usec
 
     timestamps(type: :utc_datetime_usec)
   end
@@ -56,9 +52,9 @@ defmodule Architect.Schema.Step do
   def changeset(task, attrs) do
     task
     |> cast(attrs, @required_attrs ++ @optional_attrs)
-    |> cast_assoc(:run, with: &Run.changeset/2)
+    |> cast_assoc(:run, with: &Run.changeset/2, required: true)
     |> validate_required(@required_attrs)
-    |> validate_number(:index, greater_than: 0)
     |> validate_inclusion(:status, @status)
+    |> unique_constraint([:run_id, :step_id])
   end
 end

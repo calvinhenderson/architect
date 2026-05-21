@@ -1,14 +1,14 @@
 {
-  "$id": "schemas/blueprint/task",
+  "$id": "schemas/blueprint/step",
   "$schema": "http://json-schema.org/draft-07/schema",
-  "description": "Blueprint task",
+  "description": "Blueprint step",
   "type": "object",
   "additionalProperties": false,
   "properties": {
     "id": {
       "type": "string",
       "pattern": "^[A-z0-9._-]+$",
-      "description": "The unique id of the task"
+      "description": "The unique id of the step"
     },
     "type": {
       "type": "string",
@@ -24,7 +24,7 @@
       "description": "A dictionary of input variables to pass into the step"
     },
     "if": {
-      "type": "object",
+      "type": "string",
       "description": "A boolean expression that decides whether a task should run"
     }
   },
