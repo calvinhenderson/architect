@@ -1,17 +1,27 @@
 defmodule Architect.TasksTest do
   use Architect.DataCase
 
+  import Architect.Factory
+
   alias Architect.Tasks
   alias Architect.Schema.Task
 
   describe "list_tasks/1" do
     setup do
-      %{
-        enabled: [name: "Enabled task", enabled_at: DateTime.utc_now(), deleted_at: nil],
+      [
+        enabled: [
+          name: "Enabled task",
+          enabled_at: DateTime.utc_now() |> DateTime.truncate(:second),
+          deleted_at: nil
+        ],
         disabled: [name: "Disabled task", enabled_at: nil, deleted_at: nil],
-        deleted: [name: "Deleted task", enabled_at: nil, deleted_at: DateTime.utc_now()]
-      }
-      |> Enum.map(fn {k, v} -> {k, task_fixture(v)} end)
+        deleted: [
+          name: "Deleted task",
+          enabled_at: nil,
+          deleted_at: DateTime.utc_now() |> DateTime.truncate(:second)
+        ]
+      ]
+      |> Enum.map(fn {k, v} -> {k, insert!(:task, v)} end)
     end
 
     test "lists all results", tasks do
@@ -46,7 +56,7 @@ defmodule Architect.TasksTest do
 
   describe "get_task!/1" do
     setup do
-      %{task: task_fixture()}
+      %{task: insert!(:task)}
     end
 
     test "gets a single task", %{task: task} do
@@ -66,7 +76,7 @@ defmodule Architect.TasksTest do
 
   describe "get_task/1" do
     setup do
-      %{task: task_fixture()}
+      %{task: insert!(:task)}
     end
 
     test "gets a single task", %{task: task} do
@@ -85,14 +95,14 @@ defmodule Architect.TasksTest do
 
   describe "create_changeset/2" do
     test "returns a changeset" do
-      params = valid_task_params()
+      params = build(:task) |> Map.from_struct()
       assert %Ecto.Changeset{} = Tasks.create_changeset(%Task{}, params)
     end
   end
 
   describe "create_task/2" do
     test "creates a task with valid params" do
-      params = valid_task_params()
+      params = build(:task) |> Map.from_struct()
       assert {:ok, %Task{}} = Tasks.create_task(%Task{}, params)
     end
 
@@ -108,23 +118,23 @@ defmodule Architect.TasksTest do
 
   describe "update_changeset/2" do
     test "returns a changeset" do
-      params = valid_task_params()
+      params = build(:task) |> Map.from_struct()
       assert %Ecto.Changeset{} = Tasks.update_changeset(%Task{}, params)
     end
   end
 
   describe "update_task/2" do
     test "updates a task with valid params" do
-      task = task_fixture()
-      params = valid_task_params(name: "Updated task")
+      task = insert!(:task)
+      params = build(:task, name: "Updated task") |> Map.from_struct()
 
       assert {:ok, %Task{name: "Updated task"}} =
                Tasks.update_task(task, params)
     end
 
     test "invalid params returns a changeset with errors" do
-      task = task_fixture()
-      params = %{name: nil, blueprint: nil}
+      task = insert!(:task)
+      params = %{name: nil}
 
       assert {:error, changeset} = Tasks.update_task(task, params)
       assert "can't be blank" in errors_on(changeset).name
@@ -135,7 +145,7 @@ defmodule Architect.TasksTest do
 
   describe "enable_task/1" do
     test "enables a task" do
-      task = task_fixture()
+      task = insert!(:task, enabled_at: nil)
 
       assert {:ok, %Task{enabled_at: enabled}} = Tasks.enable_task(task)
       assert %DateTime{} = enabled
@@ -143,52 +153,16 @@ defmodule Architect.TasksTest do
   end
 
   describe "disable_task/1" do
-    setup do
-      {:ok, enabled_task} =
-        task_fixture()
-        |> Tasks.enable_task()
-
-      %{task: enabled_task}
-    end
-
-    test "disables a task", %{task: task} do
-      assert {:ok, %Task{enabled_at: enabled}} = Tasks.disable_task(task)
-      assert is_nil(enabled)
+    test "disables a task" do
+      task = insert!(:task, enabled_at: DateTime.utc_now() |> DateTime.truncate(:second))
+      assert {:ok, %Task{enabled_at: nil}} = Tasks.disable_task(task)
     end
   end
 
   describe "delete_task/1" do
-    setup do
-      %{task: task_fixture()}
+    test "deletes a task" do
+      task = insert!(:task, deleted_at: nil)
+      assert {:ok, %Task{deleted_at: %DateTime{}}} = Tasks.delete_task(task)
     end
-
-    test "deletes a task", %{task: task} do
-      assert {:ok, %Task{deleted_at: deleted}} = Tasks.delete_task(task)
-      assert %DateTime{} = deleted
-    end
-  end
-
-  defp valid_task_params(opts \\ []) do
-    params = Enum.into(opts, %{})
-    id = :rand.uniform(999)
-
-    {:ok, blueprint} =
-      """
-      id: blueprint-#{id}
-      steps: []
-      """
-      |> Architect.Blueprints.evaluate_blueprint()
-
-    %{
-      name: "Task #{id}",
-      blueprint: blueprint
-    }
-    |> Map.merge(params)
-  end
-
-  defp task_fixture(opts \\ []) do
-    create_params = valid_task_params(opts)
-    {:ok, task} = Tasks.create_task(%Task{}, create_params)
-    task
   end
 end
