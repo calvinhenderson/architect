@@ -8,12 +8,63 @@ defmodule Architect.Execution do
   alias Architect.Schema.Task
 
   @doc """
+  Gets a run.
+  """
+  @spec get_run!(binary()) :: Run.t()
+  def get_run!(run_id), do: Repo.get!(Run, run_id)
+
+  @doc """
+  Gets a run.
+  """
+  @spec get_run(binary()) :: Run.t() | nil
+  def get_run(run_id), do: Repo.get(Run, run_id)
+
+  @doc """
+  Lists runs.
+  """
+  @spec list_runs(map()) :: [Run.t()]
+  def list_runs(_filters \\ %{}), do: Repo.all(Run)
+
+  @doc """
+  Gets a step.
+  """
+  @spec get_step!(binary()) :: Step.t()
+  def get_step!(step_id), do: Repo.get!(Step, step_id)
+
+  @doc """
+  Gets a step.
+  """
+  @spec get_step(binary()) :: Step.t() | nil
+  def get_step(step_id), do: Repo.get(Step, step_id)
+
+  @doc """
+  Gets a step for a run.
+  """
+  @spec get_run_step(binary(), binary()) :: Step.t() | nil
+  def get_run_step(run_id, step_id) do
+    Step.run_step_query(run_id, step_id)
+    |> Repo.one()
+  end
+
+  @doc """
+  Lists steps for a run.
+  """
+  @spec list_run_steps(binary() | Run.t(), map()) :: [Step.t()]
+  def list_run_steps(run, filters \\ %{})
+  def list_run_steps(%Run{id: run_id}, filters), do: list_run_steps(run_id, filters)
+
+  def list_run_steps(run_id, _filters) do
+    Step.run_steps_query(run_id)
+    |> Repo.all()
+  end
+
+  @doc """
   Adds a new run to the worker queue.
   """
   @spec enqueue_run(Task.t(), map(), keyword()) :: {:ok, Run.t()} | {:error, Ecto.Changeset.t()}
   def enqueue_run(%Task{} = task, %{} = inputs, opts \\ []) do
-    params = %Run{
-      task: task,
+    params = %{
+      task_id: task.id,
       parent: Keyword.get(opts, :parent),
       parent_step: Keyword.get(opts, :parent_step),
       status: :pending,
@@ -79,7 +130,10 @@ defmodule Architect.Execution do
   def upsert_run_step(%Step{} = step, %{} = params) do
     step
     |> Step.changeset(params)
-    |> Repo.insert(on_conflict: :replace_all)
+    |> Repo.insert(
+      on_conflict: :replace_all,
+      conflict_target: [:run_id, :step_id]
+    )
   end
 
   @doc """
@@ -126,6 +180,9 @@ defmodule Architect.Execution do
   @spec reap_stale_runs(keyword()) :: {non_neg_integer(), nil | [Run.t()]}
   def reap_stale_runs(opts \\ []) do
     Run.stale_runs_query(opts)
-    |> Repo.update_all(set: [status: "pending", worker_id: nil, last_heartbeat_at: nil])
+    |> Repo.update_all(
+      inc: [attempts: 1],
+      set: [status: :pending, worker_id: nil, last_heartbeat_at: nil]
+    )
   end
 end

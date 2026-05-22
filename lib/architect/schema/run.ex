@@ -42,12 +42,14 @@ defmodule Architect.Schema.Run do
 
   @required_attrs [
     :status,
+    :task_id,
     :trigger,
     :attempts
   ]
 
   @optional_attrs [
     :context,
+    :parent_id,
     :parent_step,
     :metadata,
     :inputs,
@@ -90,8 +92,6 @@ defmodule Architect.Schema.Run do
   def changeset(run, attrs) do
     run
     |> cast(attrs, @required_attrs ++ @optional_attrs)
-    |> cast_assoc(:task, with: &Task.changeset/2, required: true)
-    |> cast_assoc(:parent, with: &changeset/2)
     |> validate_required(@required_attrs)
     |> validate_inclusion(:status, @status)
     |> validate_inclusion(:trigger, @trigger)
@@ -110,10 +110,11 @@ defmodule Architect.Schema.Run do
     stale_after = Keyword.get(opts, :stale_after, 5)
 
     from r in __MODULE__,
-      where: r.status == "running" and r.last_heartbeat_at < ago(^stale_after, "minute")
+      where: r.status == :running and r.last_heartbeat_at <= ago(^stale_after, "minute"),
+      select: r
   end
 
-  def claim_run_query(worker_pid) do
+  def claim_run_query(worker_id) do
     available_runs = available_runs_query()
 
     from r in __MODULE__,
@@ -121,8 +122,8 @@ defmodule Architect.Schema.Run do
       on: r.id == available.id,
       update: [
         set: [
-          status: "running",
-          worker_pid: ^worker_pid,
+          status: :running,
+          worker_id: ^worker_id,
           started_at: fragment("NOW()"),
           last_heartbeat_at: fragment("NOW()")
         ]
@@ -132,7 +133,7 @@ defmodule Architect.Schema.Run do
 
   defp available_runs_query do
     from r in __MODULE__,
-      where: r.status == "pending",
+      where: r.status == :pending,
       limit: 1,
       lock: "FOR UPDATE SKIP LOCKED",
       select: [:id]

@@ -6,6 +6,7 @@ defmodule Architect.Schema.Step do
   use Ecto.Schema
 
   import Ecto.Changeset
+  import Ecto.Query
 
   alias Architect.Schema.Run
 
@@ -26,6 +27,7 @@ defmodule Architect.Schema.Step do
         ]
 
   @required_attrs [
+    :run_id,
     :step_id,
     :status
   ]
@@ -52,9 +54,21 @@ defmodule Architect.Schema.Step do
   def changeset(task, attrs) do
     task
     |> cast(attrs, @required_attrs ++ @optional_attrs)
-    |> cast_assoc(:run, with: &Run.changeset/2, required: true)
+    |> cast_assoc(:run, with: &Run.changeset/2, required: false)
     |> validate_required(@required_attrs)
     |> validate_inclusion(:status, @status)
     |> unique_constraint([:run_id, :step_id])
+  end
+
+  def run_step_query(run_id, step_id) do
+    from s in __MODULE__,
+      where: s.run_id == ^run_id and s.step_id == ^step_id,
+      select: s
+  end
+
+  def run_steps_query(run_id) do
+    from s in __MODULE__,
+      where: s.run_id == ^run_id,
+      select: s
   end
 end

@@ -12,13 +12,16 @@ defmodule Architect.Factory do
   def build(:run),
     do: %Architect.Schema.Run{
       status: :pending,
-      attempts: 0
+      attempts: 0,
+      trigger: :manual,
+      task_id: insert!(:task).id
     }
 
   def build(:step),
     do: %Architect.Schema.Step{
       status: :pending,
-      step_id: "step-#{System.unique_integer()}"
+      step_id: "step-#{System.unique_integer()}",
+      run_id: insert!(:run).id
     }
 
   def build(:task),
