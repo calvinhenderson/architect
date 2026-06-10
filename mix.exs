@@ -68,7 +68,8 @@ defmodule Architect.MixProject do
       {:bandit, "~> 1.5"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:yamerl, "~> 0.10.0"},
-      {:ex_json_schema, "~> 0.11.2"}
+      {:ex_json_schema, "~> 0.11.2"},
+      {:flop, "~> 0.26.4"}
     ]
   end
 
